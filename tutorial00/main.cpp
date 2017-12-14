@@ -1,6 +1,6 @@
 #define CPPIMG_IMPLEMENTATION
 #include <cppimg/cppimg.h>
-#include <stdint.h>
+#include <cstdint>
 
 int main(int , char** )
 {

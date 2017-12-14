@@ -630,7 +630,7 @@ namespace cppimg
         @param colorType
         @param stream
         */
-        static bool write(OStream& stream, s32 width, s32 height, ColorType colorType, const void* image);
+        //static bool write(OStream& stream, s32 width, s32 height, ColorType colorType, const void* image);
     private:
         static const u64 Signature = 0x0A1A0A0D474E5089U;
 
@@ -690,7 +690,8 @@ namespace cppimg
             bool initialize();
             bool terminate();
             bool read(void* image, IStream& stream);
-            bool write(OStream& stream, s32 height, const u8* image);
+            //bool write(OStream& stream, s32 height, const u8* image);
+
             void filter(u8* image);
 
             bool deflate_;
@@ -1625,6 +1626,7 @@ namespace
         return true;
     }
 
+#if 0
     bool PNG::write(OStream& stream, s32 width, s32 height, ColorType colorType, const void* image)
     {
         CPPIMG_ASSERT(CPPIMG_NULL != image);
@@ -1687,6 +1689,7 @@ namespace
         seekSet.clear();
         return true;
     }
+#endif
 
     //--- PNG::ChunkIHDR
     //----------------------------------------------------
@@ -1936,6 +1939,7 @@ namespace
         return true;
     }
 
+#if 0
     bool PNG::ChunkIDAT::write(OStream& stream, s32 height, const u8* image)
     {
         struct ReleaseMemory
@@ -2028,6 +2032,7 @@ namespace
         crc = reverse(crc);
         return stream.write(sizeof(u32), &crc)<=0;
     }
+#endif
 
     void PNG::ChunkIDAT::filter(u8* image)
     {

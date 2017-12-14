@@ -2,17 +2,21 @@ cmake_minimum_required(VERSION 3.7)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 
-set(ProjectName Tutorial00)
+set(ProjectName Tutorial01)
 project(${ProjectName})
 
+set(HEADERS "")
 set(SOURCES "main.cpp")
 
-include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR})
+set(COMMON_HEADERS "")
+set(COMMON_SOURCES "")
+set(MODULES "/")
+gather_lib_files(COMMON_HEADERS COMMON_SOURCES ".." lray ${MODULES})
 
 source_group("include" FILES ${HEADERS})
 source_group("src" FILES ${SOURCES})
 
-set(FILES ${SOURCES})
+set(FILES ${SOURCES} ${COMMON_SOURCES} ${COMMON_HEADERS})
 
 set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
@@ -30,4 +34,3 @@ elseif(APPLE)
 endif()
 
 set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName}" OUTPUT_NAME_RELEASE "${ProjectName}")
-
