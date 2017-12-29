@@ -7,6 +7,7 @@
 */
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <cmath>
 #include <limits>
 #include <new>
@@ -94,6 +95,10 @@ namespace lray
     static const u32 SSE_ALIGN = 16;
     static const u32 SSE_ALIGN_MASK = 15;
     static const uintptr_t LALIGN16_MASK = (0xFU);
+    static const Char CharNull = '\0';
+    static const Char CharLF = '\n'; //Line Feed
+    static const Char CharCR = '\r'; //Carriage Return
+    static const Char PathDelimiter = '/';
 
 #define LRAY_USE_SSE
 
@@ -175,10 +180,10 @@ namespace lray
 #define LFREE(ptr) lfree(ptr); (ptr)=NULL
 #define LFREE_RAW(ptr) lfree(ptr)
 
-    /// アライメント指定malloc
+    ///Aligned alloc
 #define LALIGNED_MALLOC(size, align) lmalloc(size, align, __FILE__, __LINE__)
 #define LALIGNED_MALLOC_DEBUG(size, align, file, line) lmalloc(size, align, file, line)
-    /// アライメント指定free
+    ///Aligned free
 #define LALIGNED_FREE(ptr, align) lfree(ptr, align); (ptr)=NULL
 #define LALIGNED_FREE_RAW(ptr, align) lfree(ptr, align)
 
@@ -195,13 +200,15 @@ namespace lray
 #define LFREE(ptr) lfree(ptr); (ptr)=NULL
 #define LFREE_RAW(ptr) lfree(ptr)
 
-    /// アライメント指定malloc
+    ///Aligned alloc
 #define LALIGNED_MALLOC(size, align) lmalloc(size, align)
 #define LALIGNED_MALLOC_DEBUG(size, align, file, line) lmalloc(size, align)
-    /// アライメント指定free
+    ///Aligned free
 #define LALIGNED_FREE(ptr, align) lfree(ptr, align); (ptr)=NULL
 #define LALIGNED_FREE_RAW(ptr, align) lfree(ptr, align)
 #endif
+    
+    //--- STL utilities
     //---------------------------------------------------------
     using std::move;
     using std::forward;
@@ -210,6 +217,7 @@ namespace lray
     using std::false_type;
     using std::declval;
 
+    //--- Constants
     //---------------------------------------------------------
 #if defined(ANDROID)
     static constexpr f32 F32_EPSILON = 1.192092896e-07F;
@@ -243,6 +251,13 @@ namespace lray
     static constexpr f32 DEG_TO_RAD = static_cast<f32>(1.57079632679489661923/90.0);
     static constexpr f32 RAD_TO_DEG = static_cast<f32>(90.0/1.57079632679489661923);
 
+    enum Result
+    {
+        Result_Fail = 0,
+        Result_Success = (0x01U<<0),
+        Result_Front = (0x01U<<0)|(0x01U<<1),
+        Result_Back = (0x01U<<0)|(0x01U<<2),
+    };
 
     //--- numeric_limits
     //---------------------------------------------------------
@@ -279,7 +294,7 @@ namespace lray
     static constexpr f32 F32_MAX = numeric_limits<f32>::maximum();
     static constexpr f32 F32_INFINITY = numeric_limits<f32>::inifinity();
 
-    //--- Utility
+    //--- Utilities
     //---------------------------------------------------------
     union UnionS32F32
     {
@@ -493,6 +508,64 @@ namespace lray
         return (epsilon<=x1);
     }
 
+    template<class T>
+    inline bool isSameSign(T x0, T x1);
+
+    template<>
+    inline bool isSameSign<s8>(s8 x0, s8 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<7));
+    }
+    template<>
+    inline bool isSameSign<s16>(s16 x0, s16 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<15));
+    }
+    template<>
+    inline bool isSameSign<s32>(s32 x0, s32 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<31));
+    }
+    template<>
+    inline bool isSameSign<s64>(s64 x0, s64 x1)
+    {
+        return 0 == ((x0^x1)&(0x1ULL<<63));
+    }
+
+    template<> inline bool isSameSign<u8>(u8, u8){ return true;}
+    template<> inline bool isSameSign<u16>(u16, u16){ return true;}
+    template<> inline bool isSameSign<u32>(u32, u32){ return true;}
+    template<> inline bool isSameSign<u64>(u64, u64){ return true;}
+
+    template<>
+    bool isSameSign<f32>(f32 x0, f32 x1);
+
+    template<>
+    bool isSameSign<f64>(f64 x0, f64 x1);
+
+    //--- String functions
+    //---------------------------------------------------------
+    inline s32 strlen_s32(const Char* str)
+    {
+        return static_cast<s32>(::strlen(str));
+    }
+
+    inline s32 strnlen_s32(const Char* str, size_t size)
+    {
+        return static_cast<s32>(::strnlen(str, size));
+    }
+
+    /**
+    @brief Extract directory path from path. Return directory path length, if dst is null.
+    @return length of dst
+    @param dst[out] ... require sufficient length what includes null character
+    @param length ... length of path
+    @param path ...
+    */
+    s32 extractDirectoryPath(Char* dst, s32 length, const Char* path);
+
+    //--- Math functions
+    //---------------------------------------------------------
     inline f32 sqrt(f32 x)
     {
         f32 ret;
@@ -718,6 +791,28 @@ namespace lray
         static const f32 InvLogHalf = static_cast<f32>(1.0/-0.30102999566);
         return pow(a, log(b)*InvLogHalf);
     }
+
+    //--- Time
+    //-----------------------------------------------------
+    void sleep(u32 milliSeconds);
+
+    /// Get performance counter
+    ClockType getPerformanceCounter();
+
+    /// Get performance count per second
+    ClockType getPerformanceFrequency();
+
+    /// Calculate duration time from performance count
+    f64 calcTime64(ClockType prevTime, ClockType currentTime);
+
+    /// Calculate duration time from performance count
+    inline f32 calcTime(ClockType prevTime, ClockType currentTime)
+    {
+        return static_cast<f32>(calcTime64(prevTime, currentTime));
+    }
+
+    /// Get time in milli second
+    u32 getTimeMilliSec();
 
     //--- SSE
     //-----------------------------------------------------

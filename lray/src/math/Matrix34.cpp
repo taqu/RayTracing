@@ -3,11 +3,11 @@
 @author t-sakai
 @date 2017/12/13 create
 */
-#include "Matrix34.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix44.h"
-#include "Quaternion.h"
+#include "math/Matrix34.h"
+#include "math/Vector3.h"
+#include "math/Vector4.h"
+#include "math/Matrix44.h"
+#include "math/Quaternion.h"
 
 namespace lray
 {
@@ -57,6 +57,16 @@ namespace
 #else
         ::memcpy(m_, rhs.m_, sizeof(Matrix34));
 #endif
+    }
+
+    void Matrix34::set(
+        f32 m00, f32 m01, f32 m02, f32 m03,
+        f32 m10, f32 m11, f32 m12, f32 m13,
+        f32 m20, f32 m21, f32 m22, f32 m23)
+    {
+        m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
+        m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
+        m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
     }
 
     Matrix34& Matrix34::operator*=(f32 f)
@@ -643,6 +653,11 @@ namespace
 
         m_[0][0] = tmp[0]; m_[0][1] = tmp[1]; m_[0][2] = tmp[2];
         m_[1][0] = tmp[3]; m_[1][1] = tmp[4]; m_[1][2] = tmp[5];
+    }
+
+    void Matrix34::setRotateAxis(const Vector3& axis, f32 radian)
+    {
+        setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
     }
 
     void Matrix34::setRotateAxis(f32 x, f32 y, f32 z, f32 radian)

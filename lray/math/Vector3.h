@@ -72,11 +72,11 @@ namespace lray
         friend Vector3 operator*(f32 f, const Vector3& v);
         friend Vector3 operator*(const Vector3& v, f32 f);
         friend Vector3 operator*(const Vector3& v0, const Vector3& v1);
-        friend Vector3&& operator/(const Vector3& v, f32 f);
-        friend Vector3&& operator/(const Vector3& v0, const Vector3& v1);
-        friend Vector3&& normalize(const Vector3& v);
-        friend Vector3&& normalize(const Vector3& v, f32 lengthSqr);
-        friend Vector3&& normalizeChecked(const Vector3& v);
+        friend Vector3 operator/(const Vector3& v, f32 f);
+        friend Vector3 operator/(const Vector3& v0, const Vector3& v1);
+        friend Vector3 normalize(const Vector3& v);
+        friend Vector3 normalize(const Vector3& v, f32 lengthSqr);
+        friend Vector3 normalizeChecked(const Vector3& v);
         friend Vector3 absolute(const Vector3& v);
 
         friend f32 dot(const Vector3& v0, const Vector3& v1);
@@ -90,7 +90,7 @@ namespace lray
         @param v0 ... 
         @param v1 ... 
         */
-        friend Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t);
+        friend Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t);
 
         /**
         @brief linear interporation
@@ -100,16 +100,23 @@ namespace lray
         friend Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1);
 
         friend Vector3 mul(f32 f, const Vector3& v);
-        friend Vector3&& mul(const Vector3& v, f32 f);
+        friend Vector3 mul(const Vector3& v, f32 f);
 
-        friend Vector3&& mul(const Matrix34& m, const Vector3& v);
-        friend Vector3&& mul(const Vector3& v, const Matrix34& m);
+        friend Vector3 mul(const Matrix34& m, const Vector3& v);
+        friend Vector3 mul(const Vector3& v, const Matrix34& m);
 
-        friend Vector3&& mul33(const Matrix34& m, const Vector3& v);
-        friend Vector3&& mul33(const Vector3& v, const Matrix34& m);
+        friend Vector3 mul33(const Matrix34& m, const Vector3& v);
+        friend Vector3 mul33(const Vector3& v, const Matrix34& m);
 
-        friend Vector3&& mul33(const Matrix44& m, const Vector3& v);
-        friend Vector3&& mul33(const Vector3& v, const Matrix44& m);
+        /**
+        */
+        friend Vector3 mul(const Matrix44& m, const Vector3& v);
+        /**
+        */
+        friend Vector3 mul(const Vector3& v, const Matrix44& m);
+
+        friend Vector3 mul33(const Matrix44& m, const Vector3& v);
+        friend Vector3 mul33(const Vector3& v, const Matrix44& m);
 
         friend Vector3 rotate(const Vector3& v, const Quaternion& rotation);
         friend Vector3 rotate(const Quaternion& rotation, const Vector3& v);
@@ -117,7 +124,7 @@ namespace lray
         friend Vector3 add(const Vector3& v0, const Vector3& v1);
         friend Vector3 sub(const Vector3& v0, const Vector3& v1);
         friend Vector3 mul(const Vector3& v0, const Vector3& v1);
-        friend Vector3&& div(const Vector3& v0, const Vector3& v1);
+        friend Vector3 div(const Vector3& v0, const Vector3& v1);
 
         friend Vector3 minimum(const Vector3& v0, const Vector3& v1);
         friend Vector3 maximum(const Vector3& v0, const Vector3& v1);
@@ -128,12 +135,12 @@ namespace lray
         /**
         @brief v0*v1 + v2
         */
-        friend Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
+        friend Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
         /**
         @brief x*v1 + v2
         */
-        friend Vector3&& muladd(f32 x, const Vector3& v0, const Vector3& v1);
+        friend Vector3 muladd(f32 x, const Vector3& v0, const Vector3& v1);
 
         //--- Members
         //--------------------------------------------------
@@ -265,12 +272,12 @@ namespace lray
     Vector3 operator*(f32 f, const Vector3& v);
     Vector3 operator*(const Vector3& v, f32 f);
     Vector3 operator*(const Vector3& v0, const Vector3& v1);
-    Vector3&& operator/(const Vector3& v, f32 f);
-    Vector3&& operator/(const Vector3& v0, const Vector3& v1);
+    Vector3 operator/(const Vector3& v, f32 f);
+    Vector3 operator/(const Vector3& v0, const Vector3& v1);
 
-    Vector3&& normalize(const Vector3& v);
-    Vector3&& normalize(const Vector3& v, f32 lengthSqr);
-    Vector3&& normalizeChecked(const Vector3& v);
+    Vector3 normalize(const Vector3& v);
+    Vector3 normalize(const Vector3& v, f32 lengthSqr);
+    Vector3 normalizeChecked(const Vector3& v);
 
     Vector3 absolute(const Vector3& v);
 
@@ -292,7 +299,7 @@ namespace lray
     @param v0 ...
     @param v1 ...
     */
-    Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t);
+    Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t);
 
     /**
     @brief ê¸å`ï‚ä‘ÅBv = t1*v0 + t0*v1
@@ -306,19 +313,19 @@ namespace lray
         return f*v;
     }
 
-    inline Vector3&& mul(const Vector3& v, f32 f)
+    inline Vector3 mul(const Vector3& v, f32 f)
     {
         return v*f;
     }
 
-    Vector3&& mul(const Matrix34& m, const Vector3& v);
-    Vector3&& mul(const Vector3& v, const Matrix34& m);
+    Vector3 mul(const Matrix34& m, const Vector3& v);
+    Vector3 mul(const Vector3& v, const Matrix34& m);
 
-    Vector3&& mul33(const Matrix34& m, const Vector3& v);
-    Vector3&& mul33(const Vector3& v, const Matrix34& m);
+    Vector3 mul33(const Matrix34& m, const Vector3& v);
+    Vector3 mul33(const Vector3& v, const Matrix34& m);
 
-    Vector3&& mul33(const Matrix44& m, const Vector3& v);
-    Vector3&& mul33(const Vector3& v, const Matrix44& m);
+    Vector3 mul33(const Matrix44& m, const Vector3& v);
+    Vector3 mul33(const Vector3& v, const Matrix44& m);
 
     Vector3 rotate(const Vector3& v, const Quaternion& rotation);
     Vector3 rotate(const Quaternion& rotation, const Vector3& v);
@@ -335,7 +342,7 @@ namespace lray
     }
 
     Vector3 mul(const Vector3& v0, const Vector3& v1);
-    Vector3&& div(const Vector3& v0, const Vector3& v1);
+    Vector3 div(const Vector3& v0, const Vector3& v1);
 
 
     inline Vector3 minimum(const Vector3& v0, const Vector3& v1)
@@ -363,9 +370,12 @@ namespace lray
     }
 
     // v0*v1 + v2
-    Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
-    // x*v1 + v2
-    Vector3&& muladd(f32 x, const Vector3& v0, const Vector3& v1);
+    // x*v0 + v0
+    Vector3 muladd(f32 x, const Vector3& v0, const Vector3& v1);
+
+    // w0*v0 + w1*v1 + w2*v2
+    Vector3 weightedAverage(f32 w0, f32 w1, f32 w2, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 }
 #endif //INC_LRAY_VECTOR3_H_

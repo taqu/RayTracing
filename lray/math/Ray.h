@@ -14,13 +14,15 @@ namespace lray
     {
     public:
         Ray(){}
-        Ray(const Vector3& origin, const Vector3& direction, f32 t, f32 tmin, f32 tmax);
 
-        Vector3 origin_;
-        Vector3 direction_;
-        f32 t_;
-        f32 tmin_;
-        f32 tmax_;
+        /**
+        @warning direction must be non-zero vector
+        */
+        Ray(const Vector3& origin, const Vector3& direction, f32 t);
+
+        Vector3 origin_; ///< 
+        Vector3 direction_; ///<
+        f32 t_; ///< current length
     };
 
     static_assert(std::is_trivially_copyable<Ray>::value == true, "Ray must be trivially copyable.");

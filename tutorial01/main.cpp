@@ -2,7 +2,7 @@
 #include <cppimg/cppimg.h>
 #include "lray.h"
 #include "Camera.h"
-#include "Ray.h"
+#include "math/Ray.h"
 using namespace lray;
 
 class Sphere
@@ -15,10 +15,10 @@ public:
 //-----------------------------------------------------------
 bool testRaySphere(f32& t, const Ray& ray, const Sphere& sphere)
 {
-    Vector3 m = sub(ray.origin_, sphere.position_);
+    Vector3 po = ray.origin_ - sphere.position_;
 
-    f32 b = dot(m, ray.direction_);
-    f32 c = dot(m, m) - sphere.radius_ * sphere.radius_;
+    f32 b = dot(po, ray.direction_);
+    f32 c = dot(po, po) - sphere.radius_ * sphere.radius_;
 
     if(0.0f<c){
         if(0.0f<b){
@@ -39,7 +39,7 @@ bool testRaySphere(f32& t, const Ray& ray, const Sphere& sphere)
     b = -b;
     t = b-discr;
     f32 tmax = b + discr;
-    return (tmax<=ray.t_);
+    return tmax<=ray.t_;
 }
 
 int main(int , char** )
@@ -65,7 +65,7 @@ int main(int , char** )
     //Loop over pixels
     for(s32 y=0; y<Height; ++y){
         for(s32 x=0; x<Width; ++x){
-            Ray ray = camera.generateRay(static_cast<f32>(x), static_cast<f32>(y), 0.0f, F32_MAX);
+            Ray ray = camera.generateRay(static_cast<f32>(x), static_cast<f32>(y));
             f32 t;
             u8 r,g,b;
             if(testRaySphere(t, ray, sphere)){

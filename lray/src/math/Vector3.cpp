@@ -3,11 +3,11 @@
 @author t-sakai
 @date 2017/12/13 create
 */
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix34.h"
-#include "Matrix44.h"
-#include "Quaternion.h"
+#include "math/Vector3.h"
+#include "math/Vector4.h"
+#include "math/Matrix34.h"
+#include "math/Matrix44.h"
+#include "math/Quaternion.h"
 
 namespace lray
 {
@@ -23,6 +23,11 @@ namespace
         return set_m128(x, y, z, 1.0f);
     }
 
+    inline lm128 load(f32 x, f32 y, f32 z, f32 w)
+    {
+        return set_m128(x, y, z, w);
+    }
+
     inline lm128 load(f32 v)
     {
         return _mm_set1_ps(v);
@@ -33,11 +38,16 @@ namespace
         store3(&v.x_, r);
     }
 
-    inline Vector3&& store(const lm128& r)
+    inline Vector3 store(const lm128& r)
     {
         Vector3 v;
         store3(&v.x_, r);
         return move(v);
+    }
+
+    inline void store(Vector4& v, const lm128& r)
+    {
+        _mm_storeu_ps(&v.x_, r);
     }
 }
 
@@ -126,7 +136,7 @@ namespace
         return {v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_};
     }
 
-    Vector3&& operator/(const Vector3& v, f32 f)
+    Vector3 operator/(const Vector3& v, f32 f)
     {
         LASSERT(!lray::isZero(f));
 
@@ -140,11 +150,11 @@ namespace
         f32 x = v.x_*f;
         f32 y = v.y_*f;
         f32 z = v.z_*f;
-        return move(Vector3(x,y,z));
+        return Vector3(x,y,z);
 #endif
     }
 
-    Vector3&& operator/(const Vector3& v0, const Vector3& v1)
+    Vector3 operator/(const Vector3& v0, const Vector3& v1)
     {
         LASSERT(!lray::isZero(v1.x_));
         LASSERT(!lray::isZero(v1.y_));
@@ -160,7 +170,7 @@ namespace
 #endif
     }
 
-    Vector3&& normalize(const Vector3& v)
+    Vector3 normalize(const Vector3& v)
     {
         f32 l = v.lengthSqr();
         LASSERT(!lray::isZero(l));
@@ -177,7 +187,7 @@ namespace
 #endif
     }
 
-    Vector3&& normalize(const Vector3& v, f32 lengthSqr)
+    Vector3 normalize(const Vector3& v, f32 lengthSqr)
     {
         LASSERT(!lray::isZero(lengthSqr));
 
@@ -189,15 +199,15 @@ namespace
         return store(xv2);
 #else
         f32 l = 1.0f/ lray::sqrt(lengthSqr);
-        return move(Vector3(v.x_*l, v.y_*l, v.z_*l));
+        return Vector3(v.x_*l, v.y_*l, v.z_*l);
 #endif
     }
 
-    Vector3&& normalizeChecked(const Vector3& v)
+    Vector3 normalizeChecked(const Vector3& v)
     {
         f32 l = v.lengthSqr();
         if(lray::isZeroPositive(l)){
-            return move(Vector3::zero());
+            return Vector3::zero();
         }else{
             return normalize(v, l);
         }
@@ -245,13 +255,13 @@ namespace
 #endif
     }
 
-    Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t)
+    Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t)
     {
         Vector3 tmp = {v1.x_-v0.x_, v1.y_-v0.y_, v1.z_-v0.z_};
         tmp.x_ = tmp.x_*t + v0.x_;
         tmp.y_ = tmp.y_*t + v0.y_;
         tmp.z_ = tmp.z_*t + v0.z_;
-        return move(tmp);
+        return tmp;
     }
 
     Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1)
@@ -262,7 +272,7 @@ namespace
     }
 
 
-    Vector3&& mul(const Matrix34& m, const Vector3& v)
+    Vector3 mul(const Matrix34& m, const Vector3& v)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -292,7 +302,7 @@ namespace
 #endif
     }
 
-    Vector3&& mul(const Vector3& v, const Matrix34& m)
+    Vector3 mul(const Vector3& v, const Matrix34& m)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -322,7 +332,7 @@ namespace
 #endif
     }
 
-    Vector3&& mul33(const Matrix34& m, const Vector3& v)
+    Vector3 mul33(const Matrix34& m, const Vector3& v)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -351,7 +361,7 @@ namespace
 #endif
     }
 
-    Vector3&& mul33(const Vector3& v, const Matrix34& m)
+    Vector3 mul33(const Vector3& v, const Matrix34& m)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -380,7 +390,77 @@ namespace
 #endif
     }
 
-    Vector3&& mul33(const Matrix44& m, const Vector3& v)
+    Vector3 mul(const Matrix44& m, const Vector3& v)
+    {
+#ifdef LRAY_USE_SSE
+        lm128 tv0 = load(v.x_);
+        lm128 tv1 = load(v.y_);
+        lm128 tv2 = load(v.z_);
+
+        lm128 tm0 = load(m.m_[0][0], m.m_[1][0], m.m_[2][0], m.m_[3][0]);
+        lm128 tm1 = load(m.m_[0][1], m.m_[1][1], m.m_[2][1], m.m_[3][1]);
+        lm128 tm2 = load(m.m_[0][2], m.m_[1][2], m.m_[2][2], m.m_[3][2]);
+        lm128 tm3 = load(m.m_[0][3], m.m_[1][3], m.m_[2][3], m.m_[3][3]);
+
+        tm0 = _mm_mul_ps(tm0, tv0);
+        tm1 = _mm_mul_ps(tm1, tv1);
+        tm2 = _mm_mul_ps(tm2, tv2);
+
+        tm0 = _mm_add_ps(tm0, tm1);
+        tm0 = _mm_add_ps(tm0, tm2);
+        tm0 = _mm_add_ps(tm0, tm3);
+
+        Vector4 rv;
+        store(rv, tm0);
+        f32 iw = 1.0f/rv.w_;
+        return {rv.x_*iw, rv.y_*iw, rv.z_*iw};
+#else
+        f32 x,y,z,w;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + m.m_[0][3];
+        y = v.x_ * m.m_[1][0] + v.y_ * m.m_[1][1] + v.z_ * m.m_[1][2] + m.m_[1][3];
+        z = v.x_ * m.m_[2][0] + v.y_ * m.m_[2][1] + v.z_ * m.m_[2][2] + m.m_[2][3];
+        w = v.x_ * m.m_[3][0] + v.y_ * m.m_[3][1] + v.z_ * m.m_[3][2] + m.m_[3][3];
+        f32 iw = 1.0f/w;
+        return {x*iw,y*iw,z*iw};
+#endif
+    }
+
+    Vector3 mul(const Vector3& v, const Matrix44& m)
+    {
+#ifdef LRAY_USE_SSE
+        lm128 tv0 = load(v.x_);
+        lm128 tv1 = load(v.y_);
+        lm128 tv2 = load(v.z_);
+
+        lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
+        lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
+        lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
+        lm128 tm3 = _mm_loadu_ps(&m.m_[3][0]);
+
+        tm0 = _mm_mul_ps(tm0, tv0);
+        tm1 = _mm_mul_ps(tm1, tv1);
+        tm2 = _mm_mul_ps(tm2, tv2);
+
+        tm0 = _mm_add_ps(tm0, tm1);
+        tm0 = _mm_add_ps(tm0, tm2);
+        tm0 = _mm_add_ps(tm0, tm3);
+
+        Vector4 rv;
+        store(rv, tm0);
+        f32 iw = 1.0f/rv.w_;
+        return {rv.x_*iw, rv.y_*iw, rv.z_*iw};
+#else
+        f32 x,y,z,w;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[1][0] + v.z_ * m.m_[2][0] + m.m_[3][0];
+        y = v.x_ * m.m_[0][1] + v.y_ * m.m_[1][1] + v.z_ * m.m_[2][1] + m.m_[3][1];
+        z = v.x_ * m.m_[0][2] + v.y_ * m.m_[1][2] + v.z_ * m.m_[2][2] + m.m_[3][2];
+        w = v.x_ * m.m_[0][3] + v.y_ * m.m_[1][3] + v.z_ * m.m_[2][3] + m.m_[3][3];
+        f32 iw = 1.0f/w;
+        return {x*iw, y*iw, z*iw};
+#endif
+    }
+
+    Vector3 mul33(const Matrix44& m, const Vector3& v)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -409,7 +489,7 @@ namespace
 #endif
     }
 
-    Vector3&& mul33(const Vector3& v, const Matrix44& m)
+    Vector3 mul33(const Vector3& v, const Matrix44& m)
     {
 #ifdef LRAY_USE_SSE
         lm128 tv0 = load(v.x_);
@@ -463,7 +543,7 @@ namespace
         return {v0.x_ * v1.x_, v0.y_ * v1.y_, v0.z_ * v1.z_};
     }
 
-    Vector3&& div(const Vector3& v0, const Vector3& v1)
+    Vector3 div(const Vector3& v0, const Vector3& v1)
     {
         LASSERT(!lray::isZero(v1.x_));
         LASSERT(!lray::isZero(v1.y_));
@@ -476,7 +556,7 @@ namespace
     }
 
     // v0*v1 + v2
-    Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         lm128 xv0 = load(v0);
         lm128 xv1 = load(v1);
@@ -486,12 +566,20 @@ namespace
     }
 
     // x*v1 + v2
-    Vector3&& muladd(f32 x, const Vector3& v0, const Vector3& v1)
+    Vector3 muladd(f32 x, const Vector3& v0, const Vector3& v1)
     {
         lm128 xv0 = load(x);
         lm128 xv1 = load(v0);
         lm128 xv2 = load(v1);
         lm128 xv3 = _mm_add_ps(_mm_mul_ps(xv0, xv1), xv2);
         return store(xv3);
+    }
+
+    Vector3 weightedAverage(f32 w0, f32 w1, f32 w2, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        f32 x = w0*v0.x_ + w1*v1.x_ + w2*v2.x_;
+        f32 y = w0*v0.y_ + w1*v1.y_ + w2*v2.y_;
+        f32 z = w0*v0.z_ + w1*v1.z_ + w2*v2.z_;
+        return Vector3(x, y, z);
     }
 }

@@ -3,11 +3,11 @@
 @author t-sakai
 @date 2017/12/13 create
 */
-#include "Quaternion.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix34.h"
-#include "Matrix44.h"
+#include "math/Quaternion.h"
+#include "math/Vector3.h"
+#include "math/Vector4.h"
+#include "math/Matrix34.h"
+#include "math/Matrix44.h"
 
 namespace lray
 {

@@ -16,12 +16,12 @@ namespace lray
     //---------------------------------------------------------
     template<class Derived> class ReferenceCounted;
     template<class T>
-    inline void intrusive_ptr_addref(ReferenceCounted<T>* ptr)
+    void intrusive_ptr_addref(ReferenceCounted<T>* ptr)
     {
         ++ptr->referenceCount_;
     }
     template<class T>
-    inline void intrusive_ptr_release(ReferenceCounted<T>* ptr)
+    void intrusive_ptr_release(ReferenceCounted<T>* ptr)
     {
         if(0==--ptr->referenceCount_){
             LDELETE_RAW(ptr);

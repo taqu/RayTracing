@@ -4,7 +4,7 @@
 @date 2017/12/14 create
 */
 #include "Camera.h"
-#include "Ray.h"
+#include "math/Ray.h"
 
 namespace lray
 {
@@ -28,13 +28,25 @@ namespace lray
     Camera::~Camera()
     {}
 
-    Ray&& Camera::generateRay(f32 screenX, f32 screenY, f32 tmin, f32 tmax) const
+    Ray Camera::generateRay(f32 screenX, f32 screenY) const
     {
-        Vector3 dx = mul((invHalfWidth_*screenX - 1.0f)*rayDx_, right_);
-        Vector3 dy = mul((1.0f-invHalfHeight_*screenY)*rayDy_, up_);
+        f32 nx = invHalfWidth_*screenX - 1.0f;
+        f32 ny = 1.0f-invHalfHeight_*screenY;
+        Vector3 dx = mul(nx*rayDx_, right_);
+        Vector3 dy = mul(ny*rayDy_, up_);
 
         Vector3 direction = normalize(dx+dy+forward_);
-        return move(Ray(position_, direction, tmax, tmin, tmax));
+        return Ray(position_, direction, farClip_);
+    }
+
+    void Camera::setNearFarClip(f32 near, f32 far)
+    {
+        LASSERT(0.0f<=near);
+        LASSERT(0.0f<=far);
+        LASSERT(near<=far);
+
+        nearClip_ = near;
+        farClip_ = far;
     }
 
     void Camera::perspective(f32 aspect, f32 radFovx)

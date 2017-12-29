@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 
-set(ProjectName Tutorial01)
+set(ProjectName Tutorial02)
 project(${ProjectName})
 
 set(HEADERS "")
@@ -10,13 +10,13 @@ set(SOURCES "main.cpp")
 
 set(COMMON_HEADERS "")
 set(COMMON_SOURCES "")
-set(MODULES "/" "/core" "/math")
+set(MODULES "/" "/core" "/math" "/shape")
 gather_lib_files(COMMON_HEADERS COMMON_SOURCES ".." lray "${MODULES}")
 
 source_group("include" FILES ${HEADERS})
 source_group("src" FILES ${SOURCES})
 
-set(FILES ${HEADERS} ${SOURCES} ${COMMON_SOURCES} ${COMMON_HEADERS})
+set(FILES ${SOURCES} ${COMMON_SOURCES} ${COMMON_HEADERS})
 
 set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")

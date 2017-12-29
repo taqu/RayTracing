@@ -5,13 +5,15 @@
 @author t-sakai
 @date 2017/12/14 create
 */
-#include "ReferenceCounted.h"
-#include "Vector3.h"
+#include "core/ReferenceCounted.h"
+#include "math/Vector3.h"
 
 namespace lray
 {
     class Ray;
 
+    /**
+    */
     class Camera : public ReferenceCounted<Camera>
     {
     public:
@@ -22,13 +24,30 @@ namespace lray
         Camera();
         ~Camera();
 
-        Ray&& generateRay(f32 screenX, f32 screenY, f32 tmin, f32 tmax) const;
+        /**
+        @brief Generate a ray from a screen point
+        @param screenX ...
+        @param screenY ...
+        */
+        Ray generateRay(f32 screenX, f32 screenY) const;
 
+        /**
+        @param width ... must be 0<width
+        @param height ... must be 0<height
+        */
         inline void setResolution(s32 width, s32 height);
 
         inline const Vector3& getPosition() const;
 
+        /**
+        @warning 
+        */
+        void setNearFarClip(f32 near, f32 far);
         void perspective(f32 aspect, f32 radFovx);
+
+        /**
+        @warning view direction (at-eye) must not equals to up
+        */
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
     protected:
         s32 width_;
@@ -50,6 +69,9 @@ namespace lray
 
     inline void Camera::setResolution(s32 width, s32 height)
     {
+        LASSERT(0<width);
+        LASSERT(0<height);
+
         width_ = width;
         height_ = height;
 

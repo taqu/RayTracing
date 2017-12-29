@@ -4,6 +4,9 @@
 @date 2017/12/13 create
 */
 #include "lray.h"
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 //Overload new/delete functions
 //---------------------------------------------------------
@@ -88,6 +91,59 @@ namespace lray
     void* lmalloc(size_t size, u32 alignment, const Char* /*file*/, s32 /*line*/)
     {
         return lmalloc(size, alignment);
+    }
+
+    //--- Utilities
+    //---------------------------------------------------------
+    template<>
+    bool isSameSign<f32>(f32 x0, f32 x1)
+    {
+        static const u32 mask = 0x1U<<31;
+        UnionU32F32 u0,u1;
+        u0.f32_ = x0;
+        u1.f32_ = x1;
+        u32 t = u0.u32_ ^ u1.u32_;
+        return 0 == (t&mask);
+    }
+
+    template<>
+    bool isSameSign<f64>(f64 x0, f64 x1)
+    {
+        static const u64 mask = 0x1ULL<<63;
+        UnionU64F64 u0, u1;
+        u0.f64_ = x0;
+        u1.f64_ = x1;
+        u64 t = u0.u64_ ^ u1.u64_;
+        return 0 == (t&mask);
+    }
+
+    //--- String functions
+    //---------------------------------------------------------
+    s32 extractDirectoryPath(Char* dst, s32 length, const Char* path)
+    {
+        LASSERT(NULL != path);
+        LASSERT(0<=length);
+        if(length<=0){
+            if(NULL != dst){
+                dst[0] = CharNull;
+            }
+            return 0;
+        }
+
+        s32 i = length-1;
+        for(; 0<=i; --i){
+            if(PathDelimiter == path[i]){
+                break;
+            }
+        }
+        s32 dstLen = i+1;
+        if(NULL != dst){
+            for(s32 j=0; j<dstLen; ++j){
+                dst[j] = path[j];
+            }
+            dst[dstLen] = CharNull;
+        }
+        return dstLen;
     }
 
     //---------------------------------------------------------
@@ -179,6 +235,70 @@ namespace lray
         t.u32_ = sign | (exponent<<23) | (fraction<<13);
 
         return t.f32_;
+    }
+    //---------------------------------------------------------
+    //---
+    //--- Time
+    //---
+    //---------------------------------------------------------
+    void sleep(u32 milliSeconds)
+    {
+#if defined(_WIN32)
+        ::Sleep(milliSeconds);
+#else
+        timespec ts;
+        ts.tv_sec = 0;
+        while(1000<milliSeconds){
+            ts.tv_sec += 1;
+            milliSeconds -= 1000;
+        }
+        ts.tv_nsec = 1000000L * milliSeconds;
+        nanosleep(&ts, NULL);
+#endif
+    }
+
+    ClockType getPerformanceCounter()
+    {
+#if defined(_WIN32)
+        LARGE_INTEGER count;
+        QueryPerformanceCounter(&count);
+        return count.QuadPart;
+#else
+        clock_t t = 0;
+        t = clock();
+        return t;
+#endif
+    }
+
+    ClockType getPerformanceFrequency()
+    {
+#if defined(_WIN32)
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        return freq.QuadPart;
+#else
+        return CLOCKS_PER_SEC;
+#endif
+    }
+
+    f64 calcTime64(ClockType prevTime, ClockType currentTime)
+    {
+        ClockType d = (currentTime>=prevTime)? currentTime - prevTime : numeric_limits<ClockType>::maximum() - prevTime + currentTime;
+        f64 delta = static_cast<f64>(d)/getPerformanceFrequency();
+        return delta;
+    }
+
+    u32 getTimeMilliSec()
+    {
+#if defined(_WIN32)
+        DWORD time = timeGetTime();
+        return static_cast<u32>(time);
+#else
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        return static_cast<u32>(tv.tv_sec*1000 + tv.tv_usec/1000);
+#endif
     }
 
 #ifdef LRAY_USE_SSE
