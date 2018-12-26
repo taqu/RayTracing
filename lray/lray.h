@@ -14,8 +14,9 @@
 #include <type_traits>
 
 //#include <mmintrin.h>  //MMX instructions
-#include <xmmintrin.h> //SSE instructions
-#include <emmintrin.h> //SSE2 instructions
+//#include <xmmintrin.h> //SSE instructions
+//#include <emmintrin.h> //SSE2 instructions
+#include <immintrin.h> //AVX instructions
 
 #if defined(ANDROID)
 #include <android/log.h>
@@ -217,48 +218,6 @@ namespace lray
     using std::false_type;
     using std::declval;
 
-    //--- Constants
-    //---------------------------------------------------------
-#if defined(ANDROID)
-    static constexpr f32 F32_EPSILON = 1.192092896e-07F;
-    static constexpr f32 F64_EPSILON = 2.2204460492503131e-016;
-#else
-    static constexpr f32 F32_EPSILON = FLT_EPSILON;
-    static constexpr f32 F64_EPSILON = DBL_EPSILON;
-#endif
-
-    static constexpr f32 F32_ANGLE_COSINE_ALMOST_ONE = 0.999f;
-    static constexpr f32 F32_DOT_EPSILON = 1.0e-6f;
-
-    static constexpr f32 PI = static_cast<f32>(3.14159265358979323846);
-    static constexpr f32 PI2 = static_cast<f32>(6.28318530717958647692);
-    static constexpr f32 INV_PI = static_cast<f32>(0.31830988618379067153);
-    static constexpr f32 INV_PI2 = static_cast<f32>(0.15915494309189533576);
-    static constexpr f32 PI_2 = static_cast<f32>(1.57079632679489661923);
-    static constexpr f32 INV_PI_2 = static_cast<f32>(0.63661977236758134308);
-    static constexpr f32 LOG2 = static_cast<f32>(0.693147180559945309417);
-    static constexpr f32 INV_LOG2 = static_cast<f32>(1.0/0.693147180559945309417);
-
-    static constexpr f64 PI_64 = static_cast<f64>(3.14159265358979323846);
-    static constexpr f64 PI2_64 = static_cast<f64>(6.28318530717958647692);
-    static constexpr f64 INV_PI_64 = static_cast<f64>(0.31830988618379067153);
-    static constexpr f64 INV_PI2_64 = static_cast<f64>(0.15915494309189533576);
-    static constexpr f64 PI_2_64 = static_cast<f64>(1.57079632679489661923);
-    static constexpr f64 INV_PI_2_64 = static_cast<f64>(0.63661977236758134308);
-    static constexpr f64 LOG2_64 = static_cast<f64>(0.693147180559945309417);
-    static constexpr f64 INV_LOG2_64 = static_cast<f64>(1.0/0.693147180559945309417);
-
-    static constexpr f32 DEG_TO_RAD = static_cast<f32>(1.57079632679489661923/90.0);
-    static constexpr f32 RAD_TO_DEG = static_cast<f32>(90.0/1.57079632679489661923);
-
-    enum Result
-    {
-        Result_Fail = 0,
-        Result_Success = (0x01U<<0),
-        Result_Front = (0x01U<<0)|(0x01U<<1),
-        Result_Back = (0x01U<<0)|(0x01U<<2),
-    };
-
     //--- numeric_limits
     //---------------------------------------------------------
     template<typename T>
@@ -291,8 +250,54 @@ namespace lray
         }
     };
 
+    //--- Constants
+    //---------------------------------------------------------
+#if defined(ANDROID)
+    static constexpr f32 F32_EPSILON = 1.192092896e-07F;
+    static constexpr f64 F64_EPSILON = 2.2204460492503131e-016;
+    static constexpr f32 F32_MAX = 3.402823466e+38F;
+    static constexpr f64 F64_MAX = 1.7976931348623158e+308;
+#else
+    static constexpr f32 F32_EPSILON = FLT_EPSILON;
+    static constexpr f64 F64_EPSILON = DBL_EPSILON;
     static constexpr f32 F32_MAX = numeric_limits<f32>::maximum();
+    static constexpr f64 F64_MAX = numeric_limits<f64>::maximum();
     static constexpr f32 F32_INFINITY = numeric_limits<f32>::inifinity();
+    static constexpr f64 F64_INFINITY = numeric_limits<f64>::inifinity();
+#endif
+
+    static constexpr f32 F32_ANGLE_COSINE_ALMOST_ONE = 0.999f;
+    static constexpr f32 F32_DOT_EPSILON = 1.0e-6f;
+    static constexpr f32 F32_HITEPSILON = 1.0e-5f;
+
+    static constexpr f32 PI = static_cast<f32>(3.14159265358979323846);
+    static constexpr f32 PI2 = static_cast<f32>(6.28318530717958647692);
+    static constexpr f32 INV_PI = static_cast<f32>(0.31830988618379067153);
+    static constexpr f32 INV_PI2 = static_cast<f32>(0.15915494309189533576);
+    static constexpr f32 PI_2 = static_cast<f32>(1.57079632679489661923);
+    static constexpr f32 INV_PI_2 = static_cast<f32>(0.63661977236758134308);
+    static constexpr f32 LOG2 = static_cast<f32>(0.693147180559945309417);
+    static constexpr f32 INV_LOG2 = static_cast<f32>(1.0/0.693147180559945309417);
+
+    static constexpr f64 PI_64 = static_cast<f64>(3.14159265358979323846);
+    static constexpr f64 PI2_64 = static_cast<f64>(6.28318530717958647692);
+    static constexpr f64 INV_PI_64 = static_cast<f64>(0.31830988618379067153);
+    static constexpr f64 INV_PI2_64 = static_cast<f64>(0.15915494309189533576);
+    static constexpr f64 PI_2_64 = static_cast<f64>(1.57079632679489661923);
+    static constexpr f64 INV_PI_2_64 = static_cast<f64>(0.63661977236758134308);
+    static constexpr f64 LOG2_64 = static_cast<f64>(0.693147180559945309417);
+    static constexpr f64 INV_LOG2_64 = static_cast<f64>(1.0/0.693147180559945309417);
+
+    static constexpr f32 DEG_TO_RAD = static_cast<f32>(1.57079632679489661923/90.0);
+    static constexpr f32 RAD_TO_DEG = static_cast<f32>(90.0/1.57079632679489661923);
+
+    enum Result
+    {
+        Result_Fail = 0,
+        Result_Success = (0x01U<<0),
+        Result_Front = (0x01U<<0)|(0x01U<<1),
+        Result_Back = (0x01U<<0)|(0x01U<<2),
+    };
 
     //--- Utilities
     //---------------------------------------------------------
@@ -927,5 +932,16 @@ namespace lray
         static lm128 normalizeChecked(f32 x, f32 y, f32 z, f32 w);
     };
 #endif
+
+    //--- HitRecord
+    //--------------------------------------------------------------
+    struct HitRecord
+    {
+        Result result_;
+        f32 t_;
+        f32 v_;
+        f32 w_;
+        const void* primitive_;
+    };
 }
 #endif //INC_LRAY_H_

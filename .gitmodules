@@ -1,0 +1,6 @@
+[submodule "common/cppgltf"]
+	path = common/cppgltf
+	url = https://github.com/taqu/cppgltf
+[submodule "common/cppimg"]
+	path = common/cppimg
+	url = https://github.com/taqu/cppimg

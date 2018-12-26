@@ -20,8 +20,11 @@ namespace lray
         */
         Ray(const Vector3& origin, const Vector3& direction, f32 t);
 
+        void invertDirection();
+
         Vector3 origin_; ///< 
         Vector3 direction_; ///<
+        Vector3 invDirection_; ///<
         f32 t_; ///< current length
     };
 

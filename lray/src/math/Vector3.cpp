@@ -109,6 +109,11 @@ namespace
         return *this;
     }
 
+    f32 Vector3::halfArea() const
+    {
+        return x_*y_ + y_*z_ + z_*x_;
+    }
+
     //--- Friend functions
     //--------------------------------------------------
     Vector3 operator+(const Vector3& v0, const Vector3& v1)

@@ -270,7 +270,7 @@ namespace lray
 
             } else{
                 //Construct new items by default constructor
-                reserve(size);
+                helper_reserve(size);
                 for(s32 i = size_; i<size; ++i){
                     LPLACEMENT_NEW(&items_[i]) value_type;
                 }

@@ -11,5 +11,18 @@ namespace lray
         :origin_(origin)
         ,direction_(normalize(direction))
         ,t_(t)
-    {}
+    {
+        invertDirection();
+    }
+
+    void Ray::invertDirection()
+    {
+        for(s32 i=0; i<3; ++i){
+            if(0.0f<=direction_[i]){
+                invDirection_[i] = (isZeroPositive(direction_[i]))? F32_MAX : 1.0f/direction_[i];
+            }else{
+                invDirection_[i] = (isZeroNegative(direction_[i]))? -F32_MAX : 1.0f/direction_[i];
+            }
+        }
+    }
 }

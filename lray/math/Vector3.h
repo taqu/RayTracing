@@ -61,6 +61,8 @@ namespace lray
         inline f32 length() const;
         inline f32 lengthSqr() const;
 
+        f32 halfArea() const;
+
         inline void swap(Vector3& rhs);
 
         inline bool isNan() const;

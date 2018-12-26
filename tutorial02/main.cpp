@@ -12,150 +12,13 @@
 #include "math/Quaternion.h"
 #include "core/ReferenceCounted.h"
 
+#include "shape/Mesh.h"
+#include "shape/Node.h"
+
 using namespace lray;
 
 namespace lray
 {
-    //--- Node
-    //------------------------------------------------------
-    class Node
-    {
-    public:
-        Node();
-        Node(Node&& rhs);
-        Node(const Char* name,
-            s32 parent,
-            s32 numChildren,
-            s32 childrenStart,
-            s32 mesh);
-
-        inline Matrix44& getMatrix();
-        inline const Matrix44& getMatrix() const;
-
-        inline Matrix44& getWorldMatrix();
-        inline const Matrix44& getWorldMatrix() const;
-
-        inline s32 getParent() const;
-        inline s32 getNumChildren() const;
-        inline s32 getChildrenStart() const;
-        inline s32 getMesh() const;
-
-        Node& operator=(Node&& rhs);
-    private:
-        Node(const Node&) = delete;
-        Node& operator=(const Node&) = delete;
-
-        String name_;
-        s32 parent_;
-        s32 numChildren_;
-        s32 childrenStart_;
-        s32 mesh_;
-        Matrix44 matrix_;
-        Matrix44 worldMatrix_;
-    };
-
-    //--- Intersection
-    //------------------------------------------------------
-    class Intersection
-    {
-    public:
-        Intersection();
-
-        Result result_;
-        f32 t_;
-        f32 b0_;
-        f32 b1_;
-        f32 b2_;
-
-        Vector3 point_;
-        Vector3 shadingNormal_;
-        Vector3 geometricNormal_;
-    };
-
-    //--- Triangle
-    //------------------------------------------------------
-    struct Triangle
-    {
-        s32 indices_[3];
-    };
-
-    //--- Primitive
-    //------------------------------------------------------
-    class Primitive
-    {
-    public:
-        enum Component
-        {
-            Component_Normal = (0x01<<0),
-            Component_Texcoord = (0x01<<1),
-            Component_Color = (0x01<<2),
-        };
-
-        Primitive();
-        Primitive(
-            s32 numVertices,
-            Vector3* positions,
-            Vector3* normals,
-            s32 numTriangles,
-            Triangle* triangles);
-        Primitive(Primitive&& rhs);
-        ~Primitive();
-
-        inline void addComponent(Component component);
-        inline bool hasComponent(Component component) const;
-
-        inline s32 getNumVertices() const;
-        inline const Vector3& getPosition(s32 index) const;
-        inline const Vector3& getNormal(s32 index) const;
-        inline s32 getNumTriangles() const;
-        inline const Triangle& getTriangle(s32 index) const;
-
-        /**
-        @brief Generate and refine elements from source
-        */
-        void refine(const Primitive& src, const lray::Matrix44& matrix);
-
-        Primitive& operator=(Primitive&& rhs);
-    protected:
-        Primitive(const Primitive&) = delete;
-        Primitive& operator=(const Primitive&) = delete;
-
-        s32 components_;
-        s32 numVertices_;
-        Vector3* positions_;
-        Vector3* normals_;
-        s32 numTriangles_;
-        Triangle* triangles_;
-    };
-
-    //--- Mesh
-    //------------------------------------------------------
-    class Mesh
-    {
-    public:
-        typedef Array<Primitive> PrimitiveArray;
-
-        Mesh();
-        Mesh(Mesh&& rhs);
-        explicit Mesh(PrimitiveArray&& primitives);
-        ~Mesh();
-
-        void clear();
-
-        Result test(Intersection& intersection, Ray& ray);
-        /**
-        @brief Generate and refine mesh from source
-        */
-        void refine(const Mesh& src, const lray::Matrix44& matrix);
-
-        Mesh& operator=(Mesh&& rhs);
-    protected:
-        Mesh(const Mesh&) = delete;
-        Mesh& operator=(const Mesh&) = delete;
-
-        PrimitiveArray primitives_;
-    };
-
     class Scene
     {
     public:
@@ -184,345 +47,6 @@ namespace lray
 
 namespace lray
 {
-    //--- Node
-    //------------------------------------------------------
-    Node::Node()
-        :parent_(-1)
-        ,numChildren_(0)
-        ,childrenStart_(-1)
-        ,mesh_(-1)
-    {
-        matrix_.identity();
-        worldMatrix_.identity();
-    }
-
-    Node::Node(Node&& rhs)
-        :parent_(rhs.parent_)
-        ,numChildren_(rhs.numChildren_)
-        ,childrenStart_(rhs.childrenStart_)
-        ,mesh_(rhs.mesh_)
-        ,matrix_(rhs.matrix_)
-        ,worldMatrix_(rhs.worldMatrix_)
-    {
-        rhs.parent_ = -1;
-        rhs.numChildren_ = 0;
-        rhs.childrenStart_ = -1;
-        rhs.mesh_ = -1;
-        rhs.matrix_.identity();
-        rhs.worldMatrix_.identity();
-    }
-
-    Node::Node(const Char* name,
-        s32 parent,
-        s32 numChildren,
-        s32 childrenStart,
-        s32 mesh)
-        :name_(name)
-        ,parent_(parent)
-        ,numChildren_(numChildren)
-        ,childrenStart_(childrenStart)
-        ,mesh_(mesh)
-    {
-        matrix_.identity();
-        worldMatrix_.identity();
-    }
-
-    inline Matrix44& Node::getMatrix()
-    {
-        return matrix_;
-    }
-
-    inline const Matrix44& Node::getMatrix() const
-    {
-        return matrix_;
-    }
-
-    inline Matrix44& Node::getWorldMatrix()
-    {
-        return worldMatrix_;
-    }
-
-    inline const Matrix44& Node::getWorldMatrix() const
-    {
-        return worldMatrix_;
-    }
-
-    inline s32 Node::getParent() const
-    {
-        return parent_;
-    }
-
-    inline s32 Node::getNumChildren() const
-    {
-        return numChildren_;
-    }
-
-    inline s32 Node::getChildrenStart() const
-    {
-        return childrenStart_;
-    }
-
-    inline s32 Node::getMesh() const
-    {
-        return mesh_;
-    }
-
-    Node& Node::operator=(Node&& rhs)
-    {
-        if(this == &rhs){
-            return *this;
-        }
-        parent_ = rhs.parent_;
-        numChildren_ = rhs.numChildren_;
-        childrenStart_ = rhs.childrenStart_;
-        mesh_ = rhs.mesh_;
-        matrix_ = rhs.matrix_;
-        worldMatrix_ = rhs.worldMatrix_;
-        rhs.parent_ = -1;
-        rhs.numChildren_ = 0;
-        rhs.childrenStart_ = -1;
-        rhs.mesh_ = -1;
-        rhs.matrix_.identity();
-        rhs.worldMatrix_.identity();
-        return *this;
-    }
-
-    //--- Intersection
-    //------------------------------------------------------
-    Intersection::Intersection()
-        :result_(Result_Fail)
-        ,t_(F32_INFINITY)
-        ,b0_(0.0f)
-        ,b1_(0.0f)
-        ,b2_(0.0f)
-    {}
-
-    //--- Primitive
-    //-----------------------------------------------------
-    Primitive::Primitive()
-        :components_(0)
-        ,numVertices_(0)
-        ,positions_(NULL)
-        ,normals_(NULL)
-        ,numTriangles_(0)
-        ,triangles_(NULL)
-    {
-    }
-
-    Primitive::Primitive(
-        s32 numVertices,
-        Vector3* positions,
-        Vector3* normals,
-        s32 numTriangles,
-        Triangle* triangles)
-        :components_(0)
-        ,numVertices_(numVertices)
-        ,positions_(positions)
-        ,normals_(normals)
-        ,numTriangles_(numTriangles)
-        ,triangles_(triangles)
-    {
-        if(NULL != normals_){
-            addComponent(Component_Normal);
-        }
-    }
-
-    Primitive::Primitive(Primitive&& rhs)
-        :components_(rhs.components_)
-        ,numVertices_(rhs.numVertices_)
-        ,positions_(rhs.positions_)
-        ,normals_(rhs.normals_)
-        ,numTriangles_(rhs.numTriangles_)
-        ,triangles_(rhs.triangles_)
-    {
-        rhs.components_ = 0;
-        rhs.numVertices_ = 0;
-        rhs.positions_ = NULL;
-        rhs.normals_ = NULL;
-        rhs.numTriangles_ = 0;
-        rhs.triangles_ = NULL;
-    }
-
-    Primitive::~Primitive()
-    {
-        LDELETE_ARRAY(triangles_);
-        LDELETE_ARRAY(normals_);
-        LDELETE_ARRAY(positions_);
-    }
-
-    inline void Primitive::addComponent(Component component)
-    {
-        components_ |= component;
-    }
-
-    inline bool Primitive::hasComponent(Component component) const
-    {
-        return 0 != (components_ & component);
-    }
-
-    inline s32 Primitive::getNumVertices() const
-    {
-        return numVertices_;
-    }
-
-    inline const Vector3& Primitive::getPosition(s32 index) const
-    {
-        LASSERT(0<=index && index<numVertices_);
-        return positions_[index];
-    }
-
-    inline const Vector3& Primitive::getNormal(s32 index) const
-    {
-        LASSERT(0<=index && index<numVertices_);
-        return normals_[index];
-    }
-
-    inline s32 Primitive::getNumTriangles() const
-    {
-        return numTriangles_;
-    }
-
-    inline const Triangle& Primitive::getTriangle(s32 index) const
-    {
-        LASSERT(0<=index && index<numTriangles_);
-        return triangles_[index];
-    }
-
-    void Primitive::refine(const Primitive& src, const lray::Matrix44& matrix)
-    {
-        components_ = src.components_;
-
-        if(numVertices_<src.numVertices_){
-            LDELETE_ARRAY(normals_);
-            LDELETE_ARRAY(positions_);
-            positions_ = LNEW Vector3[src.numVertices_];
-            if(src.hasComponent(Component_Normal)){
-                normals_ = LNEW Vector3[src.numVertices_];
-            }
-        }
-        numVertices_ = src.numVertices_;
-
-        // transform positions
-        for(s32 i=0; i<numVertices_; ++i){
-            positions_[i] = mul(matrix, src.positions_[i]);
-        }
-
-        // transform normals
-        if(src.hasComponent(Component_Normal)){
-            normals_ = LNEW Vector3[src.numVertices_];
-            for(s32 i=0; i<numVertices_; ++i){
-                normals_[i] = mul33(matrix, src.normals_[i]);
-            }
-        }
-
-        // copy triangles
-        if(numTriangles_<src.numTriangles_){
-            LDELETE_ARRAY(triangles_);
-            triangles_ = LNEW Triangle[src.numTriangles_];
-        }
-        numTriangles_ = src.numTriangles_;
-        ::memcpy(triangles_, src.triangles_, sizeof(Triangle)*numTriangles_);
-    }
-
-    Primitive& Primitive::operator=(Primitive&& rhs)
-    {
-        if(this == &rhs){
-            return *this;
-        }
-        LDELETE_ARRAY(triangles_);
-        LDELETE_ARRAY(normals_);
-        LDELETE_ARRAY(positions_);
-
-        components_ = rhs.components_;
-        numVertices_ = rhs.numVertices_;
-        positions_ = rhs.positions_;
-        normals_ = rhs.normals_;
-        numTriangles_ = rhs.numTriangles_;
-        triangles_ = rhs.triangles_;
-
-        rhs.components_ = 0;
-        rhs.numVertices_ = 0;
-        rhs.positions_ = NULL;
-        rhs.normals_ = NULL;
-        rhs.numTriangles_ = 0;
-        rhs.triangles_ = NULL;
-        return *this;
-    }
-
-    //--- Mesh
-    //-----------------------------------------------------
-    Mesh::Mesh()
-    {}
-
-    Mesh::Mesh(Mesh&& rhs)
-        :primitives_(move(rhs.primitives_))
-    {}
-
-    Mesh::Mesh(PrimitiveArray&& primitives)
-        :primitives_(move(primitives))
-    {}
-
-    Mesh::~Mesh()
-    {}
-
-    void Mesh::clear()
-    {
-        primitives_.clear();
-    }
-
-    Result Mesh::test(Intersection& intersection, Ray& ray)
-    {
-        for(s32 prim = 0; prim<primitives_.size(); ++prim){
-
-            Primitive& primitive = primitives_[prim];
-            for(s32 tri=0; tri<primitive.getNumTriangles(); ++tri){
-                const Triangle& triangle = primitive.getTriangle(tri);
-                const Vector3& p0 = primitive.getPosition(triangle.indices_[0]);
-                const Vector3& p1 = primitive.getPosition(triangle.indices_[1]);
-                const Vector3& p2 = primitive.getPosition(triangle.indices_[2]);
-
-                f32 tmpT = F32_INFINITY;
-                f32 tmpV;
-                f32 tmpW;
-                Result tmpResult = testRayTriangleBoth(tmpT, tmpV, tmpW, ray, p0, p1, p2);
-                if(tmpResult != Result_Fail && tmpT<intersection.t_){
-                    intersection.result_ = tmpResult;
-                    ray.t_ = intersection.t_ = tmpT;
-                    intersection.b0_ = 1.0f-tmpV-tmpW;
-                    intersection.b1_ = tmpV;
-                    intersection.b2_ = tmpW;
-
-                    //Calc normal
-                    f32 w0 = intersection.b0_;
-                    f32 w1 = intersection.b1_;
-                    f32 w2 = intersection.b2_;
-                    const Vector3& n0 = primitive.getNormal(triangle.indices_[0]);
-                    const Vector3& n1 = primitive.getNormal(triangle.indices_[1]);
-                    const Vector3& n2 = primitive.getNormal(triangle.indices_[2]);
-                    intersection.shadingNormal_ = weightedAverage(w0, w1, w2, n0, n1, n2);
-                }//if(tmpResult
-            }//for(s32 tri=0
-        }//for(s32 prim = 0
-        return intersection.result_;
-    }
-
-    void Mesh::refine(const Mesh& src, const lray::Matrix44& matrix)
-    {
-        primitives_.resize(src.primitives_.size());
-        for(s32 i=0; i<primitives_.size(); ++i){
-            primitives_[i].refine(src.primitives_[i], matrix);
-        }
-    }
-
-    Mesh& Mesh::operator=(Mesh&& rhs)
-    {
-        if(this == &rhs){
-            return *this;
-        }
-        primitives_ = move(rhs.primitives_);
-        return *this;
-    }
-
     //--- Scene
     //-----------------------------------------------------
     Scene::Scene()
@@ -566,7 +90,7 @@ namespace lray
 
     void Scene::updateFrame()
     {
-        refinedMeshes_.resize(nodes_.size());
+        refinedMeshes_.resize(meshes_.size());
 
         //Update world matrices and meshes of root nodes
         s32 inode=0;
@@ -579,9 +103,7 @@ namespace lray
 
             s32 imesh = node.getMesh();
             if(0<=imesh){
-                refinedMeshes_[inode].refine(meshes_[imesh], node.getWorldMatrix());
-            }else{
-                refinedMeshes_[inode].clear();
+                refinedMeshes_[imesh].refine(meshes_[imesh], node.getWorldMatrix());
             }
         }
         //Update descendant's
@@ -592,9 +114,7 @@ namespace lray
 
             s32 imesh = node.getMesh();
             if(0<=imesh){
-                refinedMeshes_[inode].refine(meshes_[imesh], node.getWorldMatrix());
-            }else{
-                refinedMeshes_[inode].clear();
+                refinedMeshes_[imesh].refine(meshes_[imesh], node.getWorldMatrix());
             }
         }
     }
@@ -1031,6 +551,7 @@ int main(int , char** )
     scene.updateFrame();
 
     //Loop over pixels
+    ClockType startTime = getPerformanceCounter();
     for(s32 y=0; y<Height; ++y){
         for(s32 x=0; x<Width; ++x){
             Intersection intersection;
@@ -1049,13 +570,16 @@ int main(int , char** )
             image[pixel+2] = b;
         }
     }
+    f64 elapsedTime = calcTime64(startTime, getPerformanceCounter());
 
     //Output
     cppimg::OFStream file;
-    if(file.open("out.ppm")){
-        cppimg::PPM::write(file, Width, Height, cppimg::ColorType_RGB, image);
+    if(file.open("out.bmp")){
+        cppimg::BMP::write(file, Width, Height, cppimg::ColorType_RGB, image);
         file.close();
     }
     delete[] image;
+
+    printf("Render time %lf sec\n", elapsedTime);
     return 0;
 }

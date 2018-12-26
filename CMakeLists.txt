@@ -39,7 +39,7 @@ include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/common ${CMAKE_CURRENT_SOU
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/lray)
 
 if(MSVC)
-    set(DEFAULT_CXX_FLAGS "/DWIN32 /D_WINDOWS /D_MBCS /W4 /WX- /nologo /fp:precise /Zc:wchar_t /TP /Gd")
+    set(DEFAULT_CXX_FLAGS "/DWIN32 /D_WINDOWS /D_MBCS /W4 /WX- /nologo /fp:precise /arch:AVX /Zc:wchar_t /TP /Gd")
     if("1800" VERSION_LESS MSVC_VERSION)
         set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} /EHsc")
     endif()
@@ -50,7 +50,7 @@ if(MSVC)
     set(DEFAULT_CXX_LINK_FLAGS_RELEASE "/LTCG")
 
 elseif(UNIX)
-    set(DEFAULT_CXX_FLAGS "-Wall -O2 -std=c++11")
+    set(DEFAULT_CXX_FLAGS "-Wall -O2 -std=c++11 -std=gnu++11 -march=native")
 elseif(APPLE)
 endif()
 
@@ -58,3 +58,4 @@ add_subdirectory(test)
 add_subdirectory(tutorial00)
 add_subdirectory(tutorial01)
 add_subdirectory(tutorial02)
+add_subdirectory(tutorial03)
